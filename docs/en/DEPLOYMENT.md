@@ -2,6 +2,30 @@
 
 [Español](../DEPLOYMENT.md) · **English** · [Русский](../ru/DEPLOYMENT.md)
 
+## Cloudflare and PC startup
+
+Connected repository: `Eddierh/reservet`. Runner: `reservet-pc`, label
+`reservet-server`, installed at `E:\actions-runner-reservet`.
+Planned routes: `reservet-dev.log14.com` → 3100 and `reservet.log14.com` → 3200.
+Run `cloudflared tunnel login` and authorize `log14.com` in your browser, then:
+
+```powershell
+./deploy/Configure-Tunnel.ps1
+./deploy/Start-Server.ps1
+```
+
+The first creates/reuses tunnel `reservet-pc` and adds DNS without overwriting
+existing records. Configuration stays outside Git at
+`E:\reservet-server\config\cloudflared.yml`. Never commit certificates or credential JSON.
+The second starts Desktop, runner and tunnel in the background, with logs under
+`E:\reservet-server\logs`. A `Reservet Server` Windows Startup shortcut launches it
+at login for this user; this does not guarantee availability before Windows login.
+
+Cloudflare terminates HTTPS and tunnels to local ports through outbound connections.
+Do not open router ports. DNS does not add login: the URL is accessible to others
+until authentication or Cloudflare Access is added. Verify local `/health/db` and
+the public HTTPS URL before declaring the deployment complete.
+
 ## Environments
 
 | Purpose            | Branch     | Local address         | Compose project  | Database                        |

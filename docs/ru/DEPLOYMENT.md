@@ -2,6 +2,30 @@
 
 [Español](../DEPLOYMENT.md) · [English](../en/DEPLOYMENT.md) · **Русский**
 
+## Cloudflare и запуск компьютера
+
+Подключённый репозиторий: `Eddierh/reservet`. Раннер: `reservet-pc`, метка
+`reservet-server`, каталог `E:\actions-runner-reservet`.
+Планируемые адреса: `reservet-dev.log14.com` → 3100 и `reservet.log14.com` → 3200.
+Выполните `cloudflared tunnel login`, разрешите доступ к `log14.com` в браузере, затем:
+
+```powershell
+./deploy/Configure-Tunnel.ps1
+./deploy/Start-Server.ps1
+```
+
+Первый скрипт создаёт или использует туннель `reservet-pc` и добавляет DNS без
+перезаписи существующих записей. Конфигурация хранится вне Git:
+`E:\reservet-server\config\cloudflared.yml`. Не публикуйте сертификат и JSON с секретами.
+Второй запускает Desktop, раннер и туннель в фоне. Логи: `E:\reservet-server\logs`.
+Ярлык `Reservet Server` в автозагрузке Windows запускает скрипт при входе этого
+пользователя; работа до входа в Windows не гарантируется.
+
+Cloudflare принимает HTTPS и подключается к локальным портам исходящим туннелем.
+Не открывайте порты роутера. DNS не добавляет вход в систему: URL доступен другим,
+пока не реализована аутентификация или Cloudflare Access. Проверьте локальный
+`/health/db` и внешний HTTPS-адрес перед признанием развёртывания завершённым.
+
 ## Окружения
 
 | Назначение          | Ветка     | Локальный адрес       | Проект Compose   | База                              |

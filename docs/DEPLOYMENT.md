@@ -2,6 +2,33 @@
 
 **Español** · [English](en/DEPLOYMENT.md) · [Русский](ru/DEPLOYMENT.md)
 
+## Cloudflare y arranque de esta PC
+
+Repositorio conectado: `Eddierh/reservet`. Runner: `reservet-pc`, etiqueta
+`reservet-server`, instalado en `E:\actions-runner-reservet`.
+
+Los nombres previstos son `reservet-dev.log14.com` → puerto 3100 y
+`reservet.log14.com` → puerto 3200. Primero ejecuta `cloudflared tunnel login`
+y autoriza `log14.com` en el navegador. Después:
+
+```powershell
+./deploy/Configure-Tunnel.ps1
+./deploy/Start-Server.ps1
+```
+
+El primero crea o reutiliza el túnel `reservet-pc` y añade DNS sin sobrescribir
+registros existentes. La configuración queda fuera del repo, en
+`E:\reservet-server\config\cloudflared.yml`; nunca subas el certificado o JSON
+de credenciales. El segundo inicia Docker Desktop, runner y túnel en segundo plano.
+Los logs quedan en `E:\reservet-server\logs`. Un acceso directo `Reservet Server`
+en Inicio de Windows ejecuta el arranque al iniciar sesión con este usuario.
+Ese mecanismo no garantiza disponibilidad antes de entrar en Windows.
+
+Cloudflare termina HTTPS y conecta mediante un túnel saliente a los puertos
+locales; no abras esos puertos en el router. Publicar DNS no implementa login:
+quien conozca la URL podrá acceder mientras no se añada autenticación o Cloudflare Access.
+Comprueba primero `/health/db` local y luego la URL HTTPS antes de dar el despliegue por terminado.
+
 ## Ambientes
 
 | Uso                | Rama           | Dirección local       | Proyecto Compose | Base                               |
