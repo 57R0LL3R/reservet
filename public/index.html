@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reservet · Mesas</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Reservet, inicio"
+        ><span class="brand-icon">r.</span> reservet</a
+      >
+      <p class="eyebrow">TU RESTAURANTE, EN ORDEN</p>
+      <nav aria-label="Navegación principal">
+        <a href="/" aria-current="page"><span>▦</span> Gestión de mesas</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="small-dot"></span> Espacio de práctica
+        <p>De la primera mesa a una gran experiencia.</p>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <span>Restaurante / <strong>Salón principal</strong></span
+        ><span class="workspace">R <span>Reservet · Desarrollo</span></span
+        ><label class="language-picker"
+          ><span id="language-label">Idioma</span
+          ><select id="language" aria-label="Idioma">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+          </select></label
+        >
+      </header>
+      <section class="heading">
+        <div>
+          <p class="eyebrow">OPERACIÓN DEL RESTAURANTE</p>
+          <h1>Cada mesa cuenta.</h1>
+          <p>Organiza tu salón y mantén todo listo para recibir.</p>
+        </div>
+        <button class="primary" id="new-table">＋ Nueva mesa</button>
+      </section>
+      <section class="connection" aria-label="Fuente de datos">
+        <div>
+          <strong>¿Con qué datos quieres trabajar?</strong>
+          <p id="mode-description">
+            Explora la interfaz con mesas de ejemplo. Los cambios se pierden al recargar.
+          </p>
+        </div>
+        <label class="mode-label"
+          >Fuente<select id="source">
+            <option value="demo">Demostración</option>
+            <option value="api">Mi API local</option>
+          </select></label
+        >
+      </section>
+      <section class="stats" aria-label="Resumen del salón">
+        <article>
+          <span>Total de mesas</span><strong id="total">0</strong
+          ><small>En el salón principal</small>
+        </article>
+        <article>
+          <span><i class="dot available"></i>Disponibles</span><strong id="available">0</strong
+          ><small>Listas para recibir</small>
+        </article>
+        <article>
+          <span><i class="dot occupied"></i>Ocupadas</span><strong id="occupied">0</strong
+          ><small>Servicio en curso</small>
+        </article>
+        <article>
+          <span><i class="dot out_of_service"></i>Fuera de servicio</span
+          ><strong id="out_of_service">0</strong><small>No disponibles por ahora</small>
+        </article>
+      </section>
+      <section class="salon">
+        <div class="section-heading">
+          <div>
+            <h2>Tu salón</h2>
+            <p id="result-count">Vista general de las mesas</p>
+          </div>
+          <button class="secondary" id="refresh">↻ Actualizar</button>
+        </div>
+        <div class="toolbar">
+          <label class="search"
+            ><span>⌕</span
+            ><input
+              id="search"
+              type="search"
+              placeholder="Buscar por nombre…"
+              aria-label="Buscar mesa por nombre" /></label
+          ><label
+            >Estado
+            <select id="filter">
+              <option value="all">Todos los estados</option>
+              <option value="available">Disponibles</option>
+              <option value="occupied">Ocupadas</option>
+              <option value="out_of_service">Fuera de servicio</option>
+            </select></label
+          >
+        </div>
+        <p id="notice" class="notice" role="status" aria-live="polite"></p>
+        <div id="tables" class="table-grid" aria-busy="false"></div>
+      </section>
+      <footer>
+        <span>Un buen servicio comienza con un salón organizado.</span><span>Reservet / Mesas</span>
+      </footer>
+    </main>
+    <dialog id="table-dialog" aria-labelledby="dialog-title">
+      <form id="table-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">PREPARA TU SALÓN</p>
+            <h2 id="dialog-title">Una nueva mesa</h2>
+          </div>
+          <button type="button" class="close" id="close-dialog" aria-label="Cerrar">×</button>
+        </div>
+        <p class="muted">Añade una mesa para comenzar a gestionarla.</p>
+        <label
+          >Nombre de la mesa<input
+            id="table-name"
+            name="name"
+            required
+            maxlength="80"
+            placeholder="Ej. Terraza 01"
+            autocomplete="off" /></label
+        ><label
+          >Capacidad<input
+            id="table-capacity"
+            name="capacity"
+            type="number"
+            min="1"
+            max="20"
+            step="1"
+            value="4"
+            required
+        /></label>
+        <p class="hint">Entre 1 y 20 personas. Se creará como disponible.</p>
+        <p id="form-error" role="alert" class="form-error"></p>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" id="cancel-dialog">Cancelar</button
+          ><button type="submit" class="primary" id="save-table">Crear mesa</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
