@@ -15,6 +15,19 @@ if (-not (Get-Process -Name 'Docker Desktop' -ErrorAction SilentlyContinue)) {
   Start-Process -FilePath $desktop -WindowStyle Hidden
 }
 
+# A runner must not accept deployments while Docker is still booting after login.
+$deadline = [DateTime]::UtcNow.AddMinutes(2)
+$ready = $false
+while ([DateTime]::UtcNow -lt $deadline) {
+  try {
+    & docker info --format '{{.ServerVersion}}' 2>$null | Out-Null
+    $ready = $LASTEXITCODE -eq 0
+  } catch { $ready = $false }
+  if ($ready) { break }
+  Start-Sleep -Seconds 2
+}
+if (-not $ready) { throw 'Docker is not ready. Runner not started; check Desktop/WSL and run this script again.' }
+
 if (-not (Get-Process -Name 'Runner.Listener' -ErrorAction SilentlyContinue)) {
   Start-Process -FilePath $env:ComSpec -ArgumentList ('/c ""' + (Join-Path $RunnerRoot 'run.cmd') + '""') -WorkingDirectory $RunnerRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $logs 'runner.out.log') -RedirectStandardError (Join-Path $logs 'runner.err.log')
 }
