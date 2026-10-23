@@ -35,6 +35,10 @@ try {
   $savedRevision = [System.IO.File]::ReadAllText((Join-Path $testRoot 'releases\dev\current.txt'))
   if ($savedRevision -ne $revision) { throw 'Failed revision was recorded as successful.' }
   Write-Host 'Deployment tests passed: environment isolation, backup order and failure stops.'
+  # The simulated failing native command intentionally set LASTEXITCODE=1.
+  # Restore success after assertions so GitHub's pwsh wrapper does not mistake
+  # that expected failure for a failed test process.
+  $global:LASTEXITCODE = 0
 } finally {
   Remove-Item Function:\docker
   Remove-Variable deployTestCommands, deployTestFailMigration -Scope Global
