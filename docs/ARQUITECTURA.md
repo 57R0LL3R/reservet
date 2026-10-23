@@ -58,7 +58,9 @@ Las fuentes tienen alternativas locales y no requieren solicitudes a terceros.
 
 ## Alcance y verificación
 
-El servidor solo escucha en localhost. Las credenciales de ejemplo son locales.
+El servidor escucha en localhost por defecto. Dentro de Docker escucha en todas
+las interfaces del contenedor, con el puerto publicado solo en localhost del host.
+Consulta [ambientes y pipeline](DEPLOYMENT.md). Las credenciales de ejemplo son locales.
 Helmet configura cabeceras y CSP; HTTP local no fuerza HTTPS/HSTS. Al desplegar
 revisa HTTPS, orígenes, secretos y permisos. Consulta las
 [recomendaciones oficiales de Express](https://expressjs.com/advanced/best-practice-security/).

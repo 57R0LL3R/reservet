@@ -2,6 +2,8 @@
 
 **Español** · [English](README.en.md) · [Русский](README.ru.md)
 
+**Servidor y pipeline:** [ambientes dev/pro y despliegue en esta PC](docs/DEPLOYMENT.md).
+
 Proyecto educativo: gestión de mesas y reservas de un restaurante.
 
 Lee también [cómo contribuir](CONTRIBUTING.md) y las

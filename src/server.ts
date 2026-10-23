@@ -3,7 +3,7 @@ import { pool } from './shared/database.js';
 import { config } from './shared/config.js';
 
 const port = config.port;
-const server = app.listen(port, '127.0.0.1', () => {
+const server = app.listen(port, config.host, () => {
   console.log(`Reservet: http://localhost:${port}`);
 });
 

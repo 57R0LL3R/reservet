@@ -56,7 +56,9 @@ do not require third-party requests.
 
 ## Scope and verification
 
-The server listens only on localhost. Example credentials are local. Helmet sets
+The server defaults to localhost. In Docker it listens on container interfaces,
+with its host port published only on localhost. See [environments and pipeline](DEPLOYMENT.md).
+Example credentials are local. Helmet sets
 headers and CSP; local HTTP does not enforce HTTPS/HSTS. On deployment, review
 HTTPS, origins, secrets and permissions. See the
 [official Express recommendations](https://expressjs.com/advanced/best-practice-security/).

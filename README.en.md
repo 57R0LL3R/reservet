@@ -2,6 +2,8 @@
 
 [Español](README.md) · **English** · [Русский](README.ru.md)
 
+**Server and pipeline:** [dev/pro environments and deployment on this PC](docs/en/DEPLOYMENT.md).
+
 Educational project: restaurant table and reservation management.
 
 Start with the [junior guide](docs/en/JUNIOR_GUIDE.md),
