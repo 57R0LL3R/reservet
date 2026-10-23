@@ -3,6 +3,10 @@ param([string]$ServerRoot = 'E:\reservet-server', [string]$RunnerRoot = 'E:\acti
 $ErrorActionPreference = 'Stop'
 $logs = Join-Path $ServerRoot 'logs'
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
+$serverTemp = Join-Path $ServerRoot 'tmp'
+New-Item -ItemType Directory -Force -Path $serverTemp | Out-Null
+$env:TEMP = $serverTemp
+$env:TMP = $serverTemp
 $dockerBin = 'C:\Program Files\Docker\Docker\resources\bin'
 $env:PATH = "$dockerBin;$env:PATH"
 # Docker CLI discovers plugins through the user's Docker config after Desktop starts.
