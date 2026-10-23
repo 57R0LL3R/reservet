@@ -151,8 +151,8 @@ Los puertos 3100 y 3200 están vinculados a `127.0.0.1`: acceso solo desde esta 
 No se han abierto firewall, router ni túneles. Antes de acceso externo hay que
 definir dominio/red, HTTPS y la autenticación/autorización pendiente del junior.
 
-Preparado y verificado localmente: configuración de ambientes, scripts PowerShell,
-compilación, tipos y pruebas. Pendiente: instalar/arrancar Docker, subir el repo,
-registrar el runner y ejecutar el primer pipeline. La imagen, Compose y las
-migraciones reales se comprobarán en GitHub y en el primer despliegue; no se
-afirman ejecutados mientras Docker no esté disponible aquí.
+Docker Desktop, WSL y el runner están instalados en esta PC. GitHub verifica la
+imagen y las migraciones reales antes de enviar el artefacto. Consulta Actions
+para comprobar el último despliegue: una verificación correcta en GitHub no
+garantiza que el despliegue en esta PC haya terminado. Para acceso externo,
+completa la autorización Cloudflare, crea las rutas y verifica ambas URLs HTTPS.

@@ -138,7 +138,8 @@ Ports 3100 and 3200 bind to `127.0.0.1`, accessible only from this PC. No firewa
 router or tunnels were opened. External access requires choosing a domain/network,
 HTTPS and the authentication/authorization that remains the junior's task.
 
-Environment configuration, PowerShell syntax, compilation, types and local tests
-are verified. Docker installation/startup, repository upload, runner registration
-and the first pipeline are pending. Image, Compose and real migrations will be
-checked by GitHub and the first deployment; they have not been run locally without Docker.
+Docker Desktop, WSL and the runner are installed on this PC. GitHub verifies the
+image and real migrations before transferring the artifact. Check Actions for
+the latest deployment result: passing GitHub verification does not guarantee
+deployment on this PC has completed. For external access, authorize Cloudflare,
+create the routes and verify both HTTPS URLs.
