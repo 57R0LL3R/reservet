@@ -139,6 +139,7 @@ return SQL queries, passwords or stack traces to clients.
 - API-mode tables must survive reloads and server restarts. Demo mode must not
   hide backend failures.
 - If using cookies, keep the same origin and document their security settings.
+- Search must be case-insensitive and the selected language must survive reloads.
 
 ### D. Tests and quality
 
@@ -178,6 +179,31 @@ git push -u origin feat/technical-test
 
 ## 6. Evaluation
 
+### AI use and delivery explanation
+
+- **You may use AI to code, research, debug and write tests.** Identify the tools
+  used and the parts where they helped.
+- You are responsible for understanding, reviewing and verifying all submitted
+  code, including generated code. Do not share secrets or personal data with tools.
+- Provide a written explanation of login → authenticated request → service →
+  PostgreSQL, your decisions and how you verified the result.
+- Describe an AI suggestion you corrected or rejected and why. If none occurred,
+  explain a decision you checked against documentation or tests.
+- Full conversation histories are not required. An explanatory video is optional;
+  **there will be no live coding exercises or live changes with the evaluator**.
+
+### Review the starting code
+
+The starter may contain functional defects. Reviewing it and correcting issues
+you find is part of the assessment. Included checks do not guarantee every
+behavior is correct: extend tests without disabling existing ones.
+
+Do not stop at the happy path: check boundaries, failures and behavior after
+reload. For each issue, document **symptom, reproduction, root cause, fix
+and regression test**. Explain the evidence rather than merely stating AI fixed it.
+
+### Criteria
+
 | Criterion     | Evidence                                                              |
 | ------------- | --------------------------------------------------------------------- |
 | Functionality | Login and tables using real PostgreSQL                                |
@@ -201,6 +227,7 @@ Submit through the same channel where you received the assessment:
   share personal keys or secrets from other environments.
 - Decisions, incomplete tasks and limitations. Screenshots/video are optional
   and do not replace code and instructions.
+- An AI-use section and a log of discovered issues, explanations and added tests.
 
 ```text
 Repository: https://github.com/YOUR_USERNAME/reservet-technical-assessment

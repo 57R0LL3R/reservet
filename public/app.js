@@ -138,7 +138,7 @@ function render() {
   $('#total').textContent = tables.length;
   for (const status of statuses)
     $(`#${status}`).textContent = tables.filter((table) => table.status === status).length;
-  const query = $('#search').value.trim().toLocaleLowerCase(locale());
+  const query = $('#search').value.trim();
   const filtered = tables.filter(
     (table) =>
       displayName(table).toLocaleLowerCase(locale()).includes(query) &&
@@ -253,7 +253,7 @@ $('#table-form').addEventListener('submit', async (event) => {
   const name = $('#table-name').value.trim();
   const capacity = Number($('#table-capacity').value);
   showFormError();
-  if (!name || name.length > 80 || !Number.isInteger(capacity) || capacity < 1 || capacity > 20) {
+  if (!name || name.length > 80 || !Number.isInteger(capacity) || capacity < 1 || capacity >= 20) {
     showFormError(translatedError('validation'));
     return;
   }
