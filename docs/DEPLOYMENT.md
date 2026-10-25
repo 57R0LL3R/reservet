@@ -1,158 +1,136 @@
-# Dev, pro y despliegue en esta PC
+# Aprender a desplegar tus propios proyectos
 
 **Español** · [English](en/DEPLOYMENT.md) · [Русский](ru/DEPLOYMENT.md)
 
-## Cloudflare y arranque de esta PC
+Material opcional de aprendizaje. **El deployment no forma parte de la prueba
+técnica**: para entregarla, trabaja localmente y comparte tu propio repositorio
+según el [README](../README.md).
 
-Repositorio conectado: `Eddierh/reservet`. Runner: `reservet-pc`, etiqueta
-`reservet-server`, instalado en `E:\actions-runner-reservet`.
+Todos los recursos que configures al practicar deben pertenecer a **tu proyecto**:
+repositorio, cuenta de hosting, base de datos, secretos, dominio y pipeline.
+Este documento no da acceso ni instrucciones para operar la infraestructura del evaluador.
 
-Los nombres previstos son `reservet-dev.log14.com` → puerto 3100 y
-`reservet.log14.com` → puerto 3200. Primero ejecuta `cloudflared tunnel login`
-y autoriza `log14.com` en el navegador. Después:
+## 1. Diferencia CI y deployment
 
-```powershell
-./deploy/Configure-Tunnel.ps1
-./deploy/Start-Server.ps1
+- **CI** instala dependencias y comprueba formato, tipos, pruebas y compilación.
+  Puedes usar un runner alojado por GitHub; no necesitas un servidor propio.
+- **Deployment** publica una versión comprobada en tu hosting y verifica que
+  funcione. Requiere un destino y credenciales tuyas.
+
+Pasar CI no publica una aplicación por sí solo. Un despliegue correcto debe
+comprobar también la conexión real a su base y las rutas principales.
+
+## 2. Empieza por CI en tu repositorio
+
+Este proyecto ya incluye el workflow **Verificaciones**. Comprueba que se ejecute
+en tu copia al subir una rama o abrir un PR. Para otro proyecto Node compatible
+con los mismos scripts, un ejemplo mínimo de `.github/workflows/ci.yml` sería:
+
+```yaml
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
 ```
 
-El primero crea o reutiliza el túnel `reservet-pc` y añade DNS sin sobrescribir
-registros existentes. La configuración queda fuera del repo, en
-`E:\reservet-server\config\cloudflared.yml`; nunca subas el certificado o JSON
-de credenciales. El segundo inicia Docker Desktop, runner y túnel en segundo plano.
-Los logs quedan en `E:\reservet-server\logs`. Un acceso directo `Reservet Server`
-en Inicio de Windows ejecuta el arranque al iniciar sesión con este usuario.
-Ese mecanismo no garantiza disponibilidad antes de entrar en Windows.
+Adapta versiones y comandos a tu proyecto y conserva el lockfile. Si tus pruebas
+de integración necesitan PostgreSQL, prepara una base temporal independiente en
+CI. Nunca ejecutes pruebas destructivas sobre la base publicada.
 
-Cloudflare termina HTTPS y conecta mediante un túnel saliente a los puertos
-locales; no abras esos puertos en el router. Publicar DNS no implementa login:
-quien conozca la URL podrá acceder mientras no se añada autenticación o Cloudflare Access.
-Comprueba primero `/health/db` local y luego la URL HTTPS antes de dar el despliegue por terminado.
+## 3. Prepara un destino que controles
 
-## Ambientes
+Elige tu propia plataforma de hosting o servidor. Un hosting que ejecute Node.js
+puede ser suficiente: **Docker no es obligatorio**. En el destino configura:
 
-| Uso                | Rama           | Dirección local       | Proyecto Compose | Base                               |
-| ------------------ | -------------- | --------------------- | ---------------- | ---------------------------------- |
-| Trabajo del junior | Cualquier rama | http://localhost:3000 | Compose original | reservet, puerto 5433              |
-| Dev desplegado     | `develop`      | http://localhost:3100 | `reservet-dev`   | reservet_dev, sin puerto publicado |
-| Pro desplegado     | `main`         | http://localhost:3200 | `reservet-pro`   | reservet_pro, sin puerto publicado |
+1. Tu repositorio y la rama que deseas publicar.
+2. La versión de Node y el directorio de trabajo.
+3. El comando de construcción: en esta base, `npm ci` y `npm run build`.
+4. El comando de inicio: en esta base, `npm start`.
+5. Una base PostgreSQL propia y persistente; no una base temporal de CI.
+6. Las variables que necesita tu aplicación. Por ejemplo, `DATABASE_URL` como
+   secreto, el `PORT` asignado por tu hosting y `HOST=0.0.0.0` si escucha por red.
 
-Los ambientes desplegados tienen redes, volúmenes y credenciales distintos, pero
-comparten PC y motor Docker: no son aislamiento frente a una avería del equipo.
-`NODE_ENV=production` en ambos ejecuta la aplicación compilada; `APP_ENV` distingue
-`dev` y `pro`. El Compose original sigue disponible para aprender localmente.
+Guarda secretos en la configuración segura del hosting o de tu CI. No los
+incluyas en Git, imágenes, capturas ni logs. El nombre de una variable se puede
+documentar en `.env.example`; su valor real no.
 
-## Pipeline
+## 4. Separa prueba y producción
 
-1. Los pull requests ejecutan las verificaciones en GitHub, nunca en esta PC.
-2. Un push a `develop` o `main` inicia `deploy.yml` en GitHub.
-3. Ejecuta lint, formato, tipos, pruebas y compilación.
-4. Construye una imagen etiquetada con el SHA del commit, arranca PostgreSQL de
-   prueba y ejecuta dos veces las migraciones para comprobar que no se repiten.
-5. Arranca la imagen y comprueba `/` y `/health/db`.
-6. Transfiere la misma imagen como artefacto al runner Windows de esta PC.
-7. Despliega `develop` a `dev` y `main` a `pro`. En pro crea primero un respaldo;
-   luego migra, arranca y verifica la aplicación.
+Cuando necesites dos ambientes, crea recursos independientes para cada uno:
 
-Los despliegues del mismo ambiente no se solapan. También puedes iniciar el
-workflow manualmente desde Actions seleccionando `main` o `develop`.
-Una vez conectado, un push a `main` desplegará automáticamente pro.
+| Recurso     | Ambiente de pruebas         | Producción                       |
+| ----------- | --------------------------- | -------------------------------- |
+| Aplicación  | Servicio de pruebas propio  | Servicio publicado propio        |
+| Base        | Datos ficticios             | Datos operativos                 |
+| Secretos    | Valores de pruebas          | Valores exclusivos de producción |
+| URL         | Dirección de pruebas propia | Dirección pública propia         |
+| Publicación | Validar cambios             | Publicar una versión revisada    |
 
-## 1. Preparar Docker y configuración
+Las ramas `develop` y `main` son una convención posible, no un requisito.
+En tu GitHub puedes crear environments para separar secretos y restringir ramas.
+Las funciones disponibles dependen del plan y de la visibilidad del repositorio.
+Protege las ramas importantes con PR y verificaciones; decide quién puede publicar.
 
-Instala [Docker Desktop para Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
-abre contenedores Linux y comprueba `docker info` y `docker compose version`.
-El servidor requiere Compose con `up --wait` y `--wait-timeout`.
+## 5. Diseña tu secuencia de publicación
 
-Desde la raíz del proyecto:
+Una secuencia razonable para **tu** pipeline es:
 
-```powershell
-./deploy/Initialize-Server.ps1
-```
+1. Ejecutar CI y detenerse si falla.
+2. Construir un artefacto identificable con el SHA del commit.
+3. Conservar la versión anterior y respaldar tu base si el cambio lo requiere.
+4. Ejecutar las migraciones pendientes en tu base de destino.
+5. Arrancar la versión comprobada en tu hosting.
+6. Comprobar las rutas de salud y una operación representativa.
+7. Registrar versión, resultado y URL en tu repositorio.
 
-Ya se ejecutó en esta PC. Es idempotente: conserva archivos existentes.
-Crea `E:\reservet-server\config\dev.env` y `pro.env` con contraseñas aleatorias
-independientes, y restringe permisos al usuario actual, SYSTEM y administradores.
-El runner debe usar esa misma cuenta de Windows, o recibir permisos explícitos
-sobre esa carpeta. No copies estos archivos a Git ni los pegues en logs.
-Los secretos no se incluyen en imágenes ni artefactos.
+Con esta base, las migraciones se ejecutan con `npm run db:migrate`. Ese comando
+usa `tsx`, una dependencia de desarrollo: ejecútalo en una fase de release con
+las herramientas instaladas o prepara un ejecutor compilado. No asumas que estará
+disponible en un runtime que instaló únicamente dependencias de producción.
 
-Si necesitas otra carpeta, pasa `-ServerRoot 'D:\reservet-server'` y configura
-la variable de repositorio `RESERVET_SERVER_ROOT` con esa misma ruta.
-No cambies contraseñas de una base ya inicializada solo editando el archivo:
-PostgreSQL requiere cambiar también el usuario mediante SQL.
+Los detalles de conexión y el comando de publicación dependen de tu hosting:
+usa su documentación y credenciales de alcance mínimo. Esta guía no incluye un
+job de publicación listo para ejecutar contra un servidor ajeno. Si automatizas
+tu despliegue, crea un workflow adaptado a tus recursos. Los archivos operativos
+del repositorio original no son la plantilla de despliegue de tu solución.
 
-## 2. Conectar GitHub y esta PC
+## 6. Verifica y prepara recuperación
 
-1. Sube el proyecto a un repositorio **privado**. Crea `main` y `develop`.
-2. En Settings → Environments crea `dev` y `pro`. Restringe las ramas de
-   despliegue: `develop` para dev y `main` para pro.
-3. Protege `main` y `develop`: exige pull requests y verificaciones correctas.
-   Los colaboradores con permisos para cambiar código de despliegue deben ser de confianza.
-4. En Settings → Actions → Runners → New self-hosted runner selecciona Windows x64.
-5. Sigue los comandos de descarga y registro que GitHub muestra en ese momento.
-   Usa una carpeta dedicada, por ejemplo `E:\actions-runner-reservet`, fuera del repo
-   y de `reservet-server`. Añade la etiqueta **`reservet-server`**.
-6. Ejecuta el runner con la cuenta que puede usar Docker y leer la configuración.
-   Antes, comprueba `docker info` desde esa misma cuenta y sesión.
-7. Comprueba que el runner figure como Online y haz un push a `develop`.
-8. Verifica el despliegue en Actions y abre http://localhost:3100.
-9. Integra por pull request a `main` y comprueba http://localhost:3200.
+En tu URL, comprueba `/`, `/health` y `/health/db`. Revisa logs sin exponer datos
+personales o secretos. Confirma persistencia después de un reinicio y separación
+entre bases. HTTPS y autenticación deben configurarse antes de usar datos reales.
 
-El registro necesita un token temporal que GitHub genera; no lo guardes en el
-repositorio. La conexión del runner es saliente: no necesitas abrir puertos
-entrantes para que GitHub le envíe trabajos. Lee la
-[documentación de runners](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners?platform=windows).
+Si eliges un túnel, debe estar en tu propia cuenta y apuntar solo a tu servicio.
+Un túnel proporciona conectividad, no autenticación de usuarios ni disponibilidad
+del equipo que sirve la aplicación.
 
-## 3. Operación y recuperación
+Si una migración falla, detén la publicación. Restaurar una aplicación anterior
+no revierte automáticamente el esquema. Prueba la restauración de respaldos en
+una base temporal y define cómo evitar pérdida de escrituras recientes.
 
-Docker Desktop debe permanecer iniciado. Configura su inicio al entrar en Windows
-y evita que la PC se suspenda durante el servicio. `restart: unless-stopped`
-reinicia contenedores cuando vuelve el motor; no arranca el motor ni el runner.
-Un runner instalado como servicio debe tener acceso al mismo motor Docker;
-verifica un reinicio completo del equipo antes de dar por disponible el servidor.
-Docker Desktop/WSL no garantiza servicio antes de iniciar sesión. Si más adelante
-necesitas disponibilidad sin sesión, considera una VM Linux con Docker Engine.
+## 7. Qué documentar en tu proyecto
 
-Inspección de dev (sustituye el SHA por el commit desplegado):
+- Requisitos, variables sin secretos y comandos de construcción/inicio/migración.
+- Cómo se ejecutan CI y las pruebas; qué ambiente usa cada una.
+- Tus URLs, reglas de publicación, verificación y recuperación.
+- Limitaciones conocidas y quién administra tus recursos.
 
-```powershell
-$env:APP_IMAGE = 'reservet:<SHA-de-40-caracteres>'
-docker compose -p reservet-dev --env-file E:\reservet-server\config\dev.env -f deploy/compose.yaml ps
-docker compose -p reservet-dev --env-file E:\reservet-server\config\dev.env -f deploy/compose.yaml logs --tail 100 app
-```
+Para la prueba técnica solo necesitas los entregables del README. Esta guía es
+para aprender y ampliar **tus proyectos** cuando decidas publicarlos.
 
-Los respaldos de pro quedan en `E:\reservet-server\backups\pro`; el último
-despliegue correcto queda en `releases\<ambiente>\current.txt`. Los respaldos
-previos al despliegue no sustituyen un respaldo periódico: copia también fuera
-de esta PC, define retención y comprueba restauraciones en una base temporal.
-Nunca pruebes una restauración sobre pro directamente. Vigila espacio de disco:
-imágenes y respaldos se conservan deliberadamente, sin limpieza destructiva automática.
+## Referencias oficiales
 
-Si falla el respaldo o la migración, el script se detiene antes de sustituir la
-aplicación. Si falla el arranque, el despliegue queda fallido y puede requerir
-recuperación manual. No hay rollback automático de aplicación ni de base.
-Las migraciones ya confirmadas permanecen aplicadas. Mantén cambios de esquema
-compatibles con la versión anterior, que puede seguir atendiendo durante la migración.
-Un respaldo es una instantánea; restaurarlo puede perder escrituras posteriores.
-
-Para desplegar manualmente una imagen ya cargada:
-
-```powershell
-./deploy/Deploy.ps1 -Environment dev -Revision <SHA-de-40-caracteres>
-```
-
-Recuperar una versión anterior requiere conservar/cargar su imagen y revisar su
-compatibilidad con la base actual. Nunca elimines los volúmenes para corregir un despliegue.
-
-## Acceso y estado actual
-
-Los puertos 3100 y 3200 están vinculados a `127.0.0.1`: acceso solo desde esta PC.
-No se han abierto firewall, router ni túneles. Antes de acceso externo hay que
-definir dominio/red, HTTPS y la autenticación/autorización pendiente del junior.
-
-Docker Desktop, WSL y el runner están instalados en esta PC. GitHub verifica la
-imagen y las migraciones reales antes de enviar el artefacto. Consulta Actions
-para comprobar el último despliegue: una verificación correcta en GitHub no
-garantiza que el despliegue en esta PC haya terminado. Para acceso externo,
-completa la autorización Cloudflare, crea las rutas y verifica ambas URLs HTTPS.
+- [CI para Node.js](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs).
+- [Deployments con GitHub Actions](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments).
+- [Environments, secretos y ramas](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).

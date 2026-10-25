@@ -248,4 +248,5 @@ Review must not depend on your `.env`, files outside the repository or access to
 [Learning guide](docs/en/JUNIOR_GUIDE.md).
 Reservations/SQS stages are future training. Some historical guides use Docker:
 follow this README's local setup for the assessment.
-The [deployment guide](docs/en/DEPLOYMENT.md) is for the original server administrator only.
+The [deployment guide for your projects](docs/en/DEPLOYMENT.md) is optional learning:
+use your own resources; it is not part of the assessment delivery.

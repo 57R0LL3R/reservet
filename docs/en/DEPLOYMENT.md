@@ -1,145 +1,117 @@
-# Dev, pro and deployment on this PC
+# Learn to deploy your own projects
 
 [Español](../DEPLOYMENT.md) · **English** · [Русский](../ru/DEPLOYMENT.md)
 
-## Cloudflare and PC startup
+Optional learning material. **Deployment is not part of the technical assessment**:
+work locally and submit your own repository as described in the [README](../../README.en.md).
 
-Connected repository: `Eddierh/reservet`. Runner: `reservet-pc`, label
-`reservet-server`, installed at `E:\actions-runner-reservet`.
-Planned routes: `reservet-dev.log14.com` → 3100 and `reservet.log14.com` → 3200.
-Run `cloudflared tunnel login` and authorize `log14.com` in your browser, then:
+Every resource used for practice must belong to **your project**: repository,
+hosting account, database, secrets, domain and pipeline. This guide provides no
+access or operating instructions for the evaluator's infrastructure.
 
-```powershell
-./deploy/Configure-Tunnel.ps1
-./deploy/Start-Server.ps1
+## 1. CI versus deployment
+
+**CI** installs dependencies and checks formatting, types, tests and build. A
+GitHub-hosted runner is sufficient; you do not need your own server.
+**Deployment** publishes a checked version to your hosting and verifies it works.
+It needs your own destination and credentials. Passing CI alone does not publish
+an application or verify its real database connection.
+
+## 2. Start with CI in your repository
+
+This project already includes **Verificaciones**. Check it runs in your copy on
+pushes and PRs. For another Node project with equivalent scripts, a minimal
+`.github/workflows/ci.yml` could be:
+
+```yaml
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
 ```
 
-The first creates/reuses tunnel `reservet-pc` and adds DNS without overwriting
-existing records. Configuration stays outside Git at
-`E:\reservet-server\config\cloudflared.yml`. Never commit certificates or credential JSON.
-The second starts Desktop, runner and tunnel in the background, with logs under
-`E:\reservet-server\logs`. A `Reservet Server` Windows Startup shortcut launches it
-at login for this user; this does not guarantee availability before Windows login.
+Adapt versions and commands to your project and keep the lockfile. Integration
+tests requiring PostgreSQL need a separate temporary CI database. Never run
+destructive tests on a published database.
 
-Cloudflare terminates HTTPS and tunnels to local ports through outbound connections.
-Do not open router ports. DNS does not add login: the URL is accessible to others
-until authentication or Cloudflare Access is added. Verify local `/health/db` and
-the public HTTPS URL before declaring the deployment complete.
+## 3. Prepare a destination you control
 
-## Environments
+Choose your own hosting platform or server. A Node.js hosting service may be
+enough: **Docker is optional**. Configure your repository/branch, Node version,
+working directory, build commands (`npm ci`, `npm run build` here) and start
+command (`npm start` here). Provision your own persistent PostgreSQL database.
 
-| Purpose            | Branch     | Local address         | Compose project  | Database                        |
-| ------------------ | ---------- | --------------------- | ---------------- | ------------------------------- |
-| Junior's workspace | Any branch | http://localhost:3000 | Original Compose | reservet, port 5433             |
-| Deployed dev       | `develop`  | http://localhost:3100 | `reservet-dev`   | reservet_dev, no published port |
-| Deployed pro       | `main`     | http://localhost:3200 | `reservet-pro`   | reservet_pro, no published port |
+Set the application's variables, such as secret `DATABASE_URL`, your hosting's
+`PORT`, and `HOST=0.0.0.0` when listening on a network. Store real values in secure
+hosting/CI settings, never Git, images, screenshots or logs. Document variable
+names and examples in `.env.example`, without real secrets.
 
-Deployed environments have separate networks, volumes and credentials but share
-the PC and Docker engine; they do not protect against machine failure.
-Both use `NODE_ENV=production` to run compiled code; `APP_ENV` distinguishes dev/pro.
-The original Compose setup remains available for local learning.
+## 4. Separate testing and production
 
-## Pipeline
+| Resource    | Testing              | Production                 |
+| ----------- | -------------------- | -------------------------- |
+| Application | Your testing service | Your published service     |
+| Database    | Fictitious data      | Operational data           |
+| Secrets     | Test-only values     | Production-only values     |
+| URL         | Your test address    | Your public address        |
+| Publication | Validate changes     | Publish a reviewed version |
 
-Pull requests run checks on GitHub, never on this PC. A push to `develop` or `main`
-starts `deploy.yml`: lint, formatting, types, tests and build, followed by a Docker
-image tagged with the commit SHA. GitHub starts a test PostgreSQL database, runs
-migrations twice, starts the application and checks `/` and `/health/db`.
-It transfers that same tested image as an artifact to the Windows runner here.
-`develop` deploys to dev; `main` deploys to pro. Pro creates a database backup before
-migrating, starting and checking the application. Deployments of one environment
-do not overlap. You may also run the workflow manually from Actions on either branch.
-Once connected, pushes to `main` automatically deploy pro.
+`develop`/`main` are possible conventions, not requirements. GitHub environments
+can separate secrets and restrict branches; feature availability depends on plan
+and repository visibility. Protect important branches with PRs and checks and
+decide who can publish.
 
-## 1. Docker and configuration
+## 5. Design your publication sequence
 
-Install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/),
-use Linux containers and check `docker info` and `docker compose version`.
-Compose must support `up --wait` and `--wait-timeout`.
+For **your own** pipeline: run CI and stop on failure; build an artifact tagged
+with the commit SHA; retain the previous version and back up your database when
+needed; run migrations; start the checked version; verify health and a representative
+operation; record the version, result and URL in your repository.
 
-From the project root:
+This base runs migrations with `npm run db:migrate`, which uses the development
+dependency `tsx`. Use a release phase with those tools installed or prepare a
+compiled migration runner. Do not assume it exists in a production-only installation.
 
-```powershell
-./deploy/Initialize-Server.ps1
-```
+Connection and publication commands depend on your hosting. Follow its official
+documentation and use minimum-scope credentials. This guide does not include a
+ready-to-run job targeting someone else's server. Write a workflow for your own
+resources; operational files from the original repository are not your deployment template.
 
-This has already run on this PC. It preserves existing files. It creates
-`E:\reservet-server\config\dev.env` and `pro.env` with separate random passwords,
-restricting Windows permissions to the current user, SYSTEM and administrators.
-The runner must use that Windows account or receive explicit access. Never commit
-these files or paste them into logs. Secrets are not included in images or artifacts.
+## 6. Verification and recovery
 
-For another location, pass `-ServerRoot 'D:\reservet-server'` and set the repository
-variable `RESERVET_SERVER_ROOT` to the same path. Editing an environment file alone
-does not change passwords in an initialized PostgreSQL database; update the user via SQL too.
+Check `/`, `/health` and `/health/db` on your URL. Review logs without leaking
+personal data or secrets. Confirm persistence after restart and separation of
+databases. Configure HTTPS and authentication before using real data.
 
-## 2. Connect GitHub and this PC
+If using a tunnel, create it in your own account and route only your service.
+Connectivity does not provide user authentication or keep the origin computer online.
 
-1. Upload the project to a **private** repository with `main` and `develop` branches.
-2. In Settings → Environments create `dev` and `pro`. Restrict deployments to
-   `develop` for dev and `main` for pro.
-3. Protect both branches with pull requests and passing checks. Only trusted
-   collaborators should be able to change deployment code.
-4. In Settings → Actions → Runners → New self-hosted runner choose Windows x64.
-5. Follow GitHub's current download/registration commands in a dedicated folder,
-   such as `E:\actions-runner-reservet`, outside the repo and server data directory.
-   Add the label **`reservet-server`**.
-6. Run under an account that can access Docker and configuration. Check `docker info`
-   from that same account/session first.
-7. Confirm the runner is Online and push to `develop`.
-8. Check Actions and open http://localhost:3100.
-9. Merge to `main` through a pull request and check http://localhost:3200.
+Stop publication if migration fails. Rolling back an application does not
+automatically revert its database schema. Test backup restoration on a temporary
+database and plan for writes made after a backup.
 
-Registration uses a temporary token generated by GitHub; never commit it. Runner
-connections are outbound; no inbound port is needed for GitHub jobs. See the
-[runner documentation](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners?platform=windows).
+## 7. Document your project
 
-## 3. Operation and recovery
+Include requirements, nonsecret variables, build/start/migration commands,
+CI/test procedures and environments, your URLs, publication rules, verification,
+recovery, limitations and resource ownership.
 
-Docker Desktop must stay running. Enable startup at Windows login and prevent
-sleep while serving. `restart: unless-stopped` restarts containers when the engine
-returns; it does not start Docker or the runner. A runner installed as a service
-must reach the same engine. Test a full PC restart before considering it available.
-Docker Desktop/WSL does not guarantee service before login; for unattended operation
-later, consider a Linux VM with Docker Engine.
+The assessment requires only the README deliverables. Use this guide to extend
+**your own projects** when you decide to publish them.
 
-Inspect dev using the deployed commit SHA:
+## Official references
 
-```powershell
-$env:APP_IMAGE = 'reservet:<40-character-SHA>'
-docker compose -p reservet-dev --env-file E:\reservet-server\config\dev.env -f deploy/compose.yaml ps
-docker compose -p reservet-dev --env-file E:\reservet-server\config\dev.env -f deploy/compose.yaml logs --tail 100 app
-```
-
-Pro backups are in `E:\reservet-server\backups\pro`; the last successful revision
-is in `releases\<environment>\current.txt`. Predeployment backups do not replace
-scheduled backups: copy them off this PC, define retention and test restoration
-against a temporary database, never directly against pro. Watch disk space: images
-and backups are deliberately retained without automatic destructive cleanup.
-
-Backup/migration failure stops deployment before replacing the application.
-Startup failure marks deployment failed and may need manual recovery. There is
-no automatic application or database rollback. Committed migrations remain applied.
-Schema changes must be compatible with the previous application, which may still
-serve during migrations. Restoring a backup can lose writes made after that snapshot.
-
-To deploy an image already loaded on the PC:
-
-```powershell
-./deploy/Deploy.ps1 -Environment dev -Revision <40-character-SHA>
-```
-
-Recovering an older application requires retaining/loading its image and checking
-compatibility with the current schema. Never delete volumes to fix deployment.
-
-## Access and current status
-
-Ports 3100 and 3200 bind to `127.0.0.1`, accessible only from this PC. No firewall,
-router or tunnels were opened. External access requires choosing a domain/network,
-HTTPS and the authentication/authorization that remains the junior's task.
-
-Docker Desktop, WSL and the runner are installed on this PC. GitHub verifies the
-image and real migrations before transferring the artifact. Check Actions for
-the latest deployment result: passing GitHub verification does not guarantee
-deployment on this PC has completed. For external access, authorize Cloudflare,
-create the routes and verify both HTTPS URLs.
+- [Node.js CI](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs).
+- [GitHub Actions deployments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments).
+- [Environments, secrets and branches](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).

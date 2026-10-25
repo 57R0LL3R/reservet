@@ -309,8 +309,6 @@ migration runner, table schema and demo/API interface. Quality tools and automat
 tests are included. Junior tasks: table API, verified integration, login,
 reservations, business tests and all SQS stages.
 
-Docker was unavailable when preparing the project. A migration attempt reached
-a server at localhost:5432 but it rejected the sample credentials; that server
-was not modified. The project uses port 5433 for Docker to avoid this conflict.
-Alternatively, create your own user/database on the existing server and adjust
-DATABASE_URL. Real migration verification remains pending until a connection is available.
+Configure your own database and set DATABASE_URL for your installation. Verify
+migrations against that local database. For the assessment, follow the README's
+scope and setup without Docker; reservations and SQS are optional later training.

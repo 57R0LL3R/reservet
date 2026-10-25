@@ -313,9 +313,6 @@ Preparado: dependencias instaladas, configuración de desarrollo, servidor de sa
 Compose, ejecutor de migraciones, esquema de mesas e interfaz con modos demo/API.
 Pendiente del junior: API de mesas, integración verificada, login, reservas,
 pruebas de negocio y todas las etapas de SQS.
-Docker no estaba disponible en el equipo al preparar este proyecto. La prueba
-de migración encontró un servidor en localhost:5432 que rechazó las credenciales
-de ejemplo; no se modificó ese servidor. El proyecto ya usa el puerto 5433 para
-Docker para evitar ese conflicto. También puedes configurar un usuario y una
-base propios en el servidor existente y ajustar DATABASE_URL. La migración real queda
-pendiente de disponer de esa conexión.
+Configura tu propia base y ajusta DATABASE_URL a tu instalación. Comprueba las
+migraciones en esa base local. Para la prueba técnica, sigue el alcance y la
+instalación sin Docker del README; reservas y SQS son etapas opcionales de formación.
