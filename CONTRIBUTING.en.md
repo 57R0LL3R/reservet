@@ -2,6 +2,10 @@
 
 [Español](CONTRIBUTING.md) · **English** · [Русский](CONTRIBUTING.ru.md)
 
+For the assessment, the [main README](README.en.md) defines tasks and submission
+in your own repository. Docker and deployment are not required; do not send PRs
+to the original repository. These conventions are supporting material.
+
 Start with the [junior guide](docs/en/JUNIOR_GUIDE.md) and
 [architecture conventions](docs/en/ARCHITECTURE.md).
 

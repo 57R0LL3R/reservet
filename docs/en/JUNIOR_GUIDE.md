@@ -2,6 +2,11 @@
 
 [Español](../GUIA_JUNIOR.md) · **English** · [Русский](../ru/JUNIOR_GUIDE.md)
 
+**Technical assessment:** follow the [main README](../../README.en.md) for scope,
+local setup without Docker and submission to your GitHub. This is an extended
+learning path: Docker, reservations and SQS below are not assessment requirements.
+Login is required by the assessment README.
+
 Also read the [contribution guide](../../CONTRIBUTING.en.md) and
 [architecture conventions](ARCHITECTURE.md). Run `npm run check` before each delivery.
 

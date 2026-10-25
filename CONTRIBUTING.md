@@ -2,6 +2,10 @@
 
 **Español** · [English](CONTRIBUTING.en.md) · [Русский](CONTRIBUTING.ru.md)
 
+Para la prueba técnica, el [README principal](README.md) define las tareas y la
+entrega en tu propio repositorio. No necesitas Docker ni deployment; no envíes
+pull requests al repositorio original. Estas convenciones son material de apoyo.
+
 Empieza por [la guía del junior](docs/GUIA_JUNIOR.md) y las
 [convenciones de arquitectura](docs/ARQUITECTURA.md).
 
