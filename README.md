@@ -139,6 +139,8 @@ No devuelvas consultas, contraseñas ni stacks al cliente.
 - Comprueba que las mesas del modo API sobreviven a recargar y reiniciar el
   servidor. El modo demo no debe ocultar errores de tu backend.
 - Si usas cookies, conserva el mismo origen y documenta sus opciones de seguridad.
+- La búsqueda debe ignorar mayúsculas/minúsculas y el idioma elegido debe
+  conservarse al recargar.
 
 ### D. Pruebas y calidad
 
@@ -178,6 +180,33 @@ git push -u origin feat/technical-test
 
 ## 6. Evaluación
 
+### Uso de IA y explicación de la entrega
+
+- **Puedes usar IA para programar, investigar, depurar y escribir pruebas.**
+  Indica las herramientas utilizadas y en qué partes te ayudaron.
+- Eres responsable de comprender, revisar y verificar todo el código entregado,
+  también el generado. No compartas secretos ni datos personales con herramientas.
+- Incluye una explicación escrita del flujo login → petición autenticada →
+  servicio → PostgreSQL, de tus decisiones y de cómo verificaste el resultado.
+- Describe una sugerencia de IA que corregiste o descartaste y por qué. Si no
+  ocurrió, explica una decisión que contrastaste con documentación o pruebas.
+- No pedimos el historial completo de conversaciones. Un vídeo explicativo es
+  opcional; **no habrá ejercicios de programación ni cambios en vivo con el evaluador**.
+
+### Revisión del código inicial
+
+El código entregado es un punto de partida y puede contener defectos funcionales.
+Revisarlo y corregir lo que detectes forma parte de la prueba. Las comprobaciones
+incluidas no garantizan que todos los comportamientos sean correctos: amplía las
+pruebas sin desactivar las existentes.
+
+No te limites al caso feliz: revisa límites, errores y comportamientos después de
+recargar. Para cada problema encontrado, documenta **síntoma, reproducción, causa,
+corrección y prueba de regresión**.
+No basta con afirmar que una IA lo arregló: explica la causa y la evidencia.
+
+### Criterios
+
 | Criterio       | Evidencia                                                                   |
 | -------------- | --------------------------------------------------------------------------- |
 | Funcionamiento | Login y mesas con PostgreSQL real                                           |
@@ -201,6 +230,8 @@ Envía por el mismo canal en que recibiste la prueba:
   nunca claves personales ni secretos de otros ambientes.
 - Decisiones, pendientes y limitaciones. Capturas o vídeo son opcionales y no
   sustituyen código e instrucciones.
+- Una sección de uso de IA y un registro de problemas encontrados con su explicación
+  y las pruebas que añadiste.
 
 ```text
 Repositorio: https://github.com/TU_USUARIO/reservet-prueba-tecnica
