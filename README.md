@@ -252,4 +252,5 @@ La revisión no debe depender de tu `.env`, archivos fuera del repo o acceso a n
 [Guía de aprendizaje](docs/GUIA_JUNIOR.md).
 Las etapas de reservas/SQS son formación futura. Algunas guías históricas usan
 Docker: para esta prueba sigue la preparación local de este README.
-El [manual de deployment](docs/DEPLOYMENT.md) es solo para el administrador original.
+La [guía de deployment para tus proyectos](docs/DEPLOYMENT.md) es aprendizaje
+opcional: usa tus propios recursos y no forma parte de la entrega.
