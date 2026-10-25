@@ -2,6 +2,11 @@
 
 **Español** · [English](en/JUNIOR_GUIDE.md) · [Русский](ru/JUNIOR_GUIDE.md)
 
+**Prueba técnica:** sigue el [README principal](../README.md) para el alcance,
+instalación local sin Docker y entrega en tu GitHub. Este documento es una ruta
+de aprendizaje ampliada: sus instrucciones Docker, reservas y SQS no son requisitos
+de la prueba. El login sí es obligatorio en el alcance del README.
+
 Consulta también [cómo contribuir](../CONTRIBUTING.md) y las
 [convenciones de arquitectura](ARQUITECTURA.md). Ejecuta `npm run check` antes de entregar.
 

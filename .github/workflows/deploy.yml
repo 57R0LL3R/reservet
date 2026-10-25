@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   verify:
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    # Candidate copies run CI, but never need or access our server's runner.
+    if: github.repository == 'Eddierh/reservet' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
