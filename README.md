@@ -1,256 +1,314 @@
-# Reservet · Prueba técnica junior
+# Reservet — Prueba de gestión de mesas
 
-**Español** · [English](README.en.md) · [Русский](README.ru.md)
+## 1. Descripción del proyecto
 
-Completa una aplicación para el personal de un restaurante: **login, gestión de
-mesas y persistencia en PostgreSQL**. Trabaja localmente, publica la solución en
-**tu propio GitHub** y entrega la URL con instrucciones reproducibles.
+Reservet es un prototipo web para la gestión de mesas de un restaurante. Esta versión integra un backend desarrollado con Node.js, Express, TypeScript y PostgreSQL con una interfaz web que permite autenticarse y administrar las mesas mediante una API REST.
 
-Este README define el alcance obligatorio. El plazo lo comunica el evaluador;
-documenta cualquier tarea incompleta. Las etapas adicionales de las guías no
-forman parte de esta prueba.
+El objetivo de esta prueba es demostrar el funcionamiento de los principales componentes de una aplicación cliente-servidor:
 
-## 1. Punto de partida y alcance
+- Persistencia de información en una base de datos relacional.
+- Registro e inicio de sesión de usuarios.
+- Autenticación mediante JSON Web Tokens (JWT).
+- Consulta, creación y actualización del estado de las mesas.
+- Integración entre la interfaz web y el backend.
+- Separación de responsabilidades entre la interfaz, la API y la base de datos.
 
-Incluido: TypeScript/Express, conexión y migraciones PostgreSQL, esquema de mesas,
-interfaz en español/inglés/ruso con modo demo/API y pruebas básicas.
+**Alcance:** esta versión es una prueba funcional. No representa todavía un producto terminado para producción ni implementa necesariamente todas las necesidades operativas de un restaurante.
 
-Debes implementar autenticación, proteger los endpoints de mesas, listar/crear/
-cambiar estados, conectar la interfaz, añadir pruebas y documentar tu solución.
-El login todavía no existe: debes construirlo.
+## 2. Requisitos previos
 
-**No se requiere Docker, AWS/SQS, Cloudflare, runner, dominios ni deployment.**
-Tampoco reservas, pagos, inventario o recuperación de contraseña. La infraestructura
-del repositorio original la administra el evaluador, no el candidato.
+Antes de ejecutar el proyecto, se necesita:
 
-## 2. Tu repositorio
+- Node.js y npm.
+- PostgreSQL instalado o accesible mediante una conexión de red.
+- Una base de datos creada para el proyecto.
+- Las dependencias del proyecto instaladas.
+- Un archivo `.env` en la raíz del repositorio con las variables de entorno requeridas.
 
-Crea un repositorio vacío en tu GitHub, sin generar otro README. Conserva el
-historial del proyecto y cambia el destino de tus pushes:
+### Variables de entorno
 
-```powershell
-git clone https://github.com/Eddierh/reservet.git reservet-prueba
-cd reservet-prueba
-git remote rename origin upstream
-git remote add origin https://github.com/TU_USUARIO/reservet-prueba-tecnica.git
-git push -u origin main
-git switch -c feat/technical-test
-```
+El archivo `.env` debe incluir, como mínimo, la configuración de conexión a la base de datos y el secreto JWT requerido por la autenticación.
 
-Sustituye `TU_USUARIO` y el nombre por los tuyos. Haz commits pequeños en tu rama.
-No envíes cambios ni PR al repositorio original. Si tu repo es privado, concede
-acceso al evaluador antes de entregar.
+Ejemplo ilustrativo:
 
-## 3. Preparación local sin Docker
-
-Instala Git, Node.js **22.13 o superior compatible con las dependencias** y
-PostgreSQL **17** directamente en tu equipo. Comprueba `git --version`,
-`node --version`, `npm --version` y `psql --version`. Si `psql` no está en PATH,
-usa SQL Shell o la herramienta de consultas de pgAdmin.
-
-Conéctate a tu PostgreSQL como administrador y ejecuta estas sentencias **por
-separado**, con autocommit activado; CREATE DATABASE no admite una transacción:
-
-```sql
-CREATE ROLE reservet_candidate LOGIN PASSWORD 'local_candidate_password';
-CREATE DATABASE reservet_candidate OWNER reservet_candidate;
-CREATE DATABASE reservet_candidate_test OWNER reservet_candidate;
-```
-
-Usa nombres diferentes si ya existen. El usuario de la app no necesita ser
-superusuario. La base `_test` es exclusiva para pruebas. No te conectes a las
-bases dev/pro del proyecto original.
-
-```powershell
-npm ci
-# Solo si aún no existe .env:
-Copy-Item .env.example .env
-```
-
-Ajusta `.env` a tu instalación:
-
-```dotenv
+```env
 PORT=3000
-DATABASE_URL=postgresql://reservet_candidate:local_candidate_password@localhost:5432/reservet_candidate
+DATABASE_URL=postgresql://USUARIO:CONTRASENA@localhost:5432/reservet
+JWT_SECRET=REEMPLAZAR_POR_UN_SECRETO_ALEATORIO
 ```
 
-El ejemplo original usa **5433** para Docker; una instalación directa suele usar
-**5432**. Usa tu puerto real y codifica los caracteres especiales de la contraseña
-para una URL. No subas `.env` ni credenciales reales.
+Los nombres de las variables de conexión deben coincidir con los que consume la configuración actual del backend. Si el proyecto utiliza variables de PostgreSQL individuales en lugar de `DATABASE_URL`, deben conservarse las que ya estén definidas en el código.
 
-```powershell
-npm run db:migrate
+**Importante sobre `JWT_SECRET`:**
+
+- Debe configurarse para que la autenticación JWT funcione.
+- Debe contener al menos 32 bytes aleatorios, según la validación implementada.
+- No debe compartirse, publicarse en el repositorio ni enviarse al frontend.
+- En producción debe utilizarse un secreto seguro y administrado fuera del código fuente.
+- El valor del ejemplo no es un secreto válido para uso real.
+
+No se deben subir contraseñas de base de datos, secretos JWT ni otras credenciales al repositorio.
+
+## 3. Instalación y ejecución
+
+Desde la raíz del proyecto:
+
+```bash
+npm install
+```
+
+Configurar las variables de entorno y comprobar que PostgreSQL esté disponible.
+
+A continuación, ejecutar las migraciones de base de datos mediante el mecanismo definido por el proyecto. Las migraciones existentes crean las estructuras necesarias para las mesas y los usuarios.
+
+Finalmente, iniciar el servidor usando el script configurado en `package.json`. Por ejemplo, si los scripts disponibles son los habituales:
+
+```bash
 npm run dev
 ```
 
-Abre **http://localhost:3000** y, en otra terminal, comprueba:
+o, para una ejecución compilada, el comando de producción definido por el proyecto.
 
-```powershell
-Invoke-RestMethod http://localhost:3000/health
-Invoke-RestMethod http://localhost:3000/health/db
-```
+No se debe asumir que ambos comandos existen sin comprobar primero la sección `scripts` de `package.json`.
 
-Espera `status: ok` y `database: connected`. Selecciona **Mi API local** para
-probar tu backend. Inicialmente `/api/tables` devuelve 404: debes implementarlo.
-El modo demo solo guarda en memoria y no demuestra persistencia. No uses
-`npm run db:up` ni `npm run db:down`: son comandos para Docker.
-
-## 4. Tareas obligatorias
-
-### A. Autenticación
-
-- Agrega migraciones de usuarios y un seed o procedimiento repetible para crear
-  un usuario de prueba. No incluyas contraseñas reales en Git.
-- Implementa login, logout y consulta de sesión actual. Puedes elegir sesión o
-  token: explica tu decisión, caducidad y comportamiento de revocación al salir.
-- Guarda contraseñas con scrypt, bcrypt o Argon2; nunca en texto plano ni con
-  SHA-256 simple. Login incorrecto: 401 y mensaje genérico.
-- Protege en el **servidor** todos los endpoints de mesas: sin autenticación deben
-  responder 401. Ocultar botones no es protección suficiente.
-- Crea la pantalla de login y la acción de salir; conserva los tres idiomas y
-  el selector. No se exige registro público, correo ni roles avanzados.
-- Documenta nuevas variables con ejemplos en `.env.example`. Las rutas de salud
-  pueden seguir públicas, sin revelar secretos.
-
-### B. API de mesas
-
-| Método y ruta                  | Entrada                               | Resultado                                |
-| ------------------------------ | ------------------------------------- | ---------------------------------------- |
-| `GET /api/tables`              | Sin cuerpo                            | 200 y array de mesas                     |
-| `POST /api/tables`             | `{ "name": "Mesa 1", "capacity": 4 }` | 201 y mesa creada con estado `available` |
-| `PATCH /api/tables/:id/status` | `{ "status": "occupied" }`            | 200 y mesa completa actualizada          |
-
-Cada mesa incluye `id` entero positivo, `name`, `capacity` entera y `status`.
-Valida nombre no vacío de hasta 80 caracteres, capacidad de **1 a 20**, ID
-positivo y estados `available`, `occupied`, `out_of_service`.
-
-Datos inválidos: **400**; mesa inexistente: **404**; nombre duplicado: **409**;
-sin autenticación: **401**. Usa SQL parametrizado y restricciones de base de datos.
-No devuelvas consultas, contraseñas ni stacks al cliente.
-
-### C. Arquitectura e interfaz
-
-- Divide el módulo en rutas, servicio y repositorio; separa HTTP, negocio y SQL.
-- Agrega migraciones nuevas, sin modificar las ya aplicadas. La solución debe
-  funcionar con una base vacía y los comandos documentados, sin cambios ocultos.
-- Conecta el listado, formulario, filtros y cambio de estado de la interfaz.
-  Muestra carga y errores, evita envíos repetidos e inserta texto externo de
-  forma segura. Valida en servidor aunque el navegador ya valide.
-- Comprueba que las mesas del modo API sobreviven a recargar y reiniciar el
-  servidor. El modo demo no debe ocultar errores de tu backend.
-- Si usas cookies, conserva el mismo origen y documenta sus opciones de seguridad.
-- La búsqueda debe ignorar mayúsculas/minúsculas y el idioma elegido debe
-  conservarse al recargar.
-
-### D. Pruebas y calidad
-
-Incluye pruebas de login correcto/incorrecto, acceso sin sesión, logout según tu
-mecanismo, crear/listar/cambiar estado, validaciones, duplicados y mesa inexistente.
-Comprueba persistencia contra la base `_test`, nunca borrando datos de trabajo.
-
-Las pruebas incluidas usan mocks/JSDOM y no cubren tu backend de negocio.
-Documenta cómo configurar y migrar la base de pruebas, sus comandos y qué está
-simulado. Si necesitas `TEST_DATABASE_URL`, explícalo y prepara una base temporal
-para las pruebas de integración en tu CI. No desactives comprobaciones existentes.
-
-```powershell
-npm run format
-npm run check
-```
-
-`check` ejecuta lint, formato, tipos, pruebas y compilación. **Verificaciones** debe
-pasar en tu GitHub. El deployment está reservado al repositorio original y se
-omite en las copias: no necesitas instalar un runner.
-
-## 5. Orden de trabajo y publicación
-
-1. Prepara PostgreSQL y comprueba `/health/db`.
-2. Implementa y prueba mesas en tu rama.
-3. Agrega usuarios, seed, login y protección del módulo.
-4. Conecta la interfaz, verifica los tres idiomas y completa pruebas.
-5. Ejecuta las verificaciones y prueba tus instrucciones desde cero.
-6. Sube tu rama, abre un PR **en tu propio repo**, revísalo e intégralo a su rama
-   por defecto para que la solución final sea fácil de encontrar.
-
-```powershell
-git add <archivos-de-tu-cambio>
-git commit -m "feat: describe el cambio implementado"
-git push -u origin feat/technical-test
-```
-
-## 6. Evaluación
-
-### Uso de IA y explicación de la entrega
-
-- **Puedes usar IA para programar, investigar, depurar y escribir pruebas.**
-  Indica las herramientas utilizadas y en qué partes te ayudaron.
-- Eres responsable de comprender, revisar y verificar todo el código entregado,
-  también el generado. No compartas secretos ni datos personales con herramientas.
-- Incluye una explicación escrita del flujo login → petición autenticada →
-  servicio → PostgreSQL, de tus decisiones y de cómo verificaste el resultado.
-- Describe una sugerencia de IA que corregiste o descartaste y por qué. Si no
-  ocurrió, explica una decisión que contrastaste con documentación o pruebas.
-- No pedimos el historial completo de conversaciones. Un vídeo explicativo es
-  opcional; **no habrá ejercicios de programación ni cambios en vivo con el evaluador**.
-
-### Revisión del código inicial
-
-El código entregado es un punto de partida y puede contener defectos funcionales.
-Revisarlo y corregir lo que detectes forma parte de la prueba. Las comprobaciones
-incluidas no garantizan que todos los comportamientos sean correctos: amplía las
-pruebas sin desactivar las existentes.
-
-No te limites al caso feliz: revisa límites, errores y comportamientos después de
-recargar. Para cada problema encontrado, documenta **síntoma, reproducción, causa,
-corrección y prueba de regresión**.
-No basta con afirmar que una IA lo arregló: explica la causa y la evidencia.
-
-### Criterios
-
-| Criterio       | Evidencia                                                                   |
-| -------------- | --------------------------------------------------------------------------- |
-| Funcionamiento | Login y mesas con PostgreSQL real                                           |
-| Diseño         | Responsabilidades claras y decisiones explicadas                            |
-| Seguridad      | Hash de contraseñas, protección del backend, validación y SQL parametrizado |
-| Pruebas        | Casos correctos, errores y persistencia reproducibles                       |
-| Entrega        | Commits comprensibles, CI correcta e instrucciones completas                |
-
-Debes poder explicar tu código y las herramientas o ayudas utilizadas. Reservas,
-SQS, microservicios y deployment no son requisitos ni sustituyen tareas obligatorias.
-
-## 7. Entrega al evaluador
-
-Envía por el mismo canal en que recibiste la prueba:
-
-- **URL de tu repositorio**, accesible al evaluador, rama final y SHA a revisar.
-- URL del PR de tu repo y de una ejecución correcta de CI.
-- Un README con instalación, PostgreSQL, variables, migraciones, seed, arranque
-  y comandos para todas las pruebas.
-- Credenciales **solo de demostración local**, o el procedimiento para generarlas;
-  nunca claves personales ni secretos de otros ambientes.
-- Decisiones, pendientes y limitaciones. Capturas o vídeo son opcionales y no
-  sustituyen código e instrucciones.
-- Una sección de uso de IA y un registro de problemas encontrados con su explicación
-  y las pruebas que añadiste.
+Con el servidor iniciado, abrir la dirección local correspondiente, por ejemplo:
 
 ```text
-Repositorio: https://github.com/TU_USUARIO/reservet-prueba-tecnica
-Rama final y commit:
-Pull request:
-CI:
-Instrucciones de ejecución: sección de mi README
-Usuario de prueba: procedimiento de seed documentado
-Completado / pendiente:
+http://localhost:3000/
 ```
 
-Antes de entregar, clona tu repo en otra carpeta y sigue tus propias instrucciones.
-La revisión no debe depender de tu `.env`, archivos fuera del repo o acceso a nuestra PC.
+La ruta raíz muestra la pantalla de autenticación. Después de iniciar sesión o registrarse, el usuario accede al panel de gestión de mesas.
 
-## Referencias y administración
+## 4. Arquitectura general
 
-[Arquitectura](docs/ARQUITECTURA.md) · [Contribución](CONTRIBUTING.md) ·
-[Guía de aprendizaje](docs/GUIA_JUNIOR.md).
-Las etapas de reservas/SQS son formación futura. Algunas guías históricas usan
-Docker: para esta prueba sigue la preparación local de este README.
-La [guía de deployment para tus proyectos](docs/DEPLOYMENT.md) es aprendizaje
-opcional: usa tus propios recursos y no forma parte de la entrega.
+La aplicación se organiza en tres componentes principales:
+
+1. **Frontend:** interfaz web construida con HTML, CSS y JavaScript. Permite iniciar sesión, consultar las mesas, crear registros y modificar estados.
+2. **Backend:** API REST desarrollada con Node.js, Express y TypeScript. Recibe las solicitudes, valida la autenticación y procesa las operaciones.
+3. **Base de datos:** PostgreSQL, responsable de almacenar los usuarios y las mesas de forma persistente.
+
+Flujo general:
+
+```text
+Navegador
+   |
+   | HTTP / JSON
+   v
+API REST — Express / TypeScript
+   |
+   | Consultas SQL
+   v
+PostgreSQL
+```
+
+Las operaciones protegidas requieren el token JWT en el encabezado `Authorization`.
+
+## 5. Rutas del frontend
+
+| Ruta | Función |
+|---|---|
+| `/` | Pantalla de inicio de sesión y registro. |
+| `/tables.html` | Panel principal de gestión de mesas. |
+
+### Flujo de navegación
+
+1. El usuario abre `/`.
+2. Puede iniciar sesión o crear una cuenta.
+3. El frontend envía las credenciales a la API.
+4. Si la autenticación es exitosa, guarda el token en `sessionStorage`.
+5. El usuario accede a `/tables.html`.
+6. El panel verifica la sesión y consulta las mesas del backend.
+7. El usuario puede crear mesas, filtrar resultados, actualizar la información y modificar estados.
+8. Al cerrar sesión, se eliminan las credenciales de sesión del navegador y se vuelve al inicio de sesión.
+
+El uso de `sessionStorage` limita la persistencia del token a la sesión de la pestaña del navegador. No sustituye otras medidas de seguridad necesarias para un entorno de producción.
+
+## 6. Rutas de la API
+
+Las siguientes rutas corresponden al contrato esperado por el frontend de esta prueba.
+
+### 6.1. Salud y conexión a la base de datos
+
+| Método | Ruta | Función | Autenticación |
+|---|---|---|---|
+| `GET` | `/health/db` | Comprueba la conexión con PostgreSQL. | Según la configuración del backend. |
+
+### 6.2. Autenticación
+
+| Método | Ruta | Función | Autenticación |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Registra un usuario nuevo. | Pública |
+| `POST` | `/api/auth/login` | Valida las credenciales e inicia sesión. | Pública |
+| `GET` | `/api/auth/me` | Devuelve los datos del usuario autenticado. | JWT |
+
+Las operaciones de registro y acceso utilizan el correo electrónico y la contraseña. La contraseña se almacena como un hash, no como texto plano.
+
+Las respuestas exitosas de registro e inicio de sesión incluyen un objeto de usuario y un token JWT.
+
+Ejemplo de estructura esperada:
+
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "usuario@ejemplo.com",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "token": "TOKEN_JWT"
+}
+```
+
+Los valores anteriores son ilustrativos.
+
+### 6.3. Gestión de mesas
+
+| Método | Ruta | Función | Autenticación |
+|---|---|---|---|
+| `GET` | `/api/tables` | Consulta las mesas registradas. | JWT |
+| `POST` | `/api/tables` | Crea una mesa nueva. | JWT |
+| `PATCH` | `/api/tables/:id/status` | Actualiza el estado de una mesa. | JWT |
+
+Los encabezados de las solicitudes protegidas deben incluir:
+
+```http
+Authorization: Bearer TOKEN_JWT
+```
+
+#### Consultar mesas
+
+`GET /api/tables`
+
+Devuelve una colección de mesas con la estructura esperada:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Terraza 01",
+    "capacity": 4,
+    "status": "available"
+  }
+]
+```
+
+#### Crear una mesa
+
+`POST /api/tables`
+
+Ejemplo de cuerpo:
+
+```json
+{
+  "name": "Terraza 01",
+  "capacity": 4
+}
+```
+
+La mesa creada debe persistirse en PostgreSQL y devolverse en la respuesta.
+
+#### Actualizar el estado
+
+`PATCH /api/tables/:id/status`
+
+Ejemplo para marcar una mesa como ocupada:
+
+```json
+{
+  "status": "occupied"
+}
+```
+
+Los estados utilizados por la interfaz son:
+
+- `available`: disponible.
+- `occupied`: ocupada.
+- `out_of_service`: fuera de servicio.
+
+El identificador `:id` corresponde a la mesa que se desea modificar.
+
+## 7. Scripts y archivos del frontend
+
+Los archivos del frontend se encuentran en la carpeta `public/`.
+
+| Archivo | Responsabilidad |
+|---|---|
+| `index.html` | Estructura de la pantalla de inicio de sesión y registro. |
+| `login.js` | Envía las credenciales al backend, procesa la respuesta, administra la sesión del navegador y redirige al panel. |
+| `login.css` | Estilos de la pantalla de acceso, independientes de los estilos del panel. |
+| `tables.html` | Estructura del panel principal: navegación, indicadores, filtros, listado de mesas y formulario de creación. |
+| `app.js` | Lógica del panel. Consulta la API, representa las mesas, crea registros, cambia estados, controla errores y actualiza la interfaz. |
+| `i18n.js` | Gestiona las traducciones de la interfaz para los idiomas configurados: español, inglés y ruso. |
+| `styles.css` | Define la presentación visual del panel, incluida la distribución, los márgenes, las tarjetas y los componentes de la interfaz. |
+
+### Responsabilidades principales
+
+**`login.js`**
+
+- Envía solicitudes de registro e inicio de sesión.
+- Presenta errores de autenticación.
+- Guarda el token JWT en `sessionStorage`.
+- Verifica la sesión existente cuando se abre el inicio de sesión.
+
+**`app.js`**
+
+- Comprueba la sesión antes de mostrar el panel.
+- Consulta las mesas mediante `GET /api/tables`.
+- Crea mesas mediante `POST /api/tables`.
+- Actualiza estados mediante `PATCH /api/tables/:id/status`.
+- Calcula los indicadores del salón.
+- Implementa búsqueda, filtrado y actualización de la información.
+- Permite cambiar el idioma de la interfaz.
+- Redirige al inicio de sesión cuando la API rechaza el token.
+
+**`i18n.js` y `styles.css`**
+
+Se mantienen separados de la lógica de negocio. El primero controla las traducciones y el segundo la presentación visual del panel.
+
+## 8. Persistencia de datos
+
+La información de las mesas no depende de una lista fija de demostración en el frontend.
+
+El flujo de trabajo es el siguiente:
+
+1. El panel consulta los datos guardados en el backend.
+2. Las operaciones de creación y actualización se envían a la API.
+3. El backend procesa las solicitudes y persiste los cambios en PostgreSQL.
+4. Al actualizar la página o volver a consultar los datos, se recupera la información almacenada.
+
+Por tanto, si la base de datos no contiene mesas, el panel debe mostrar el estado vacío y permitir crear nuevos registros.
+
+## 9. Seguridad y limitaciones
+
+Esta implementación es una prueba funcional y tiene las siguientes consideraciones:
+
+- El acceso a las rutas protegidas se realiza mediante JWT.
+- Las contraseñas se almacenan mediante hash.
+- El secreto JWT se configura mediante una variable de entorno.
+- El token del frontend se guarda en `sessionStorage`.
+- No se debe publicar el archivo `.env`.
+- La autorización actual debe revisarse si se incorporan roles, varios restaurantes o aislamiento de datos entre clientes.
+- Antes de producción, deben evaluarse HTTPS, límites de solicitudes, validación de entradas, políticas de CORS, gestión de secretos, expiración y renovación de sesiones, y tratamiento de errores.
+
+La autenticación por sí sola no garantiza que un usuario solo pueda acceder a los datos de su propio restaurante. Esa separación debe implementarse explícitamente si pasa a ser un requisito.
+
+## 10. Pruebas funcionales realizadas
+
+Durante la prueba se verificaron los siguientes flujos:
+
+- Conexión con la base de datos mediante el endpoint de salud.
+- Registro e inicio de sesión.
+- Acceso al panel mediante autenticación.
+- Consulta de mesas desde la API.
+- Creación de mesas.
+- Actualización del estado de las mesas.
+- Persistencia de los cambios después de actualizar la página.
+- Cierre de sesión y redirección al inicio de sesión.
+
+Estas pruebas demuestran el flujo funcional básico, pero no equivalen a una auditoría de seguridad, pruebas de carga ni una certificación para producción.
+
+## 11. Estado del proyecto
+
+**Estado:** prototipo funcional para una prueba de integración entre frontend, backend y base de datos.
+
+La versión actual demuestra las operaciones principales de autenticación y gestión de mesas. Las mejoras futuras pueden incluir pruebas automatizadas, documentación interactiva de la API, roles de usuario, aislamiento por restaurante, reservas, historial de cambios y despliegue controlado.
+
